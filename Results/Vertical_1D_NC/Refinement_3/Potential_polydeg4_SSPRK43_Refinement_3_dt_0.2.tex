@@ -1,0 +1,45 @@
+\begin{tabular}{rrrrrr}
+  \hline
+  \textbf{surface\_flux} & \textbf{volume\_flux} & \textbf{use\_volume\_flux} & \textbf{t} & \textbf{max\_vel} & \textbf{min\_vel} \\
+  \texttt{String} & \texttt{String} & \texttt{Bool} & \texttt{Float64} & \texttt{U\{Nothing, Float64\}} & \texttt{U\{Nothing, Float64\}} \\\hline
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_theta & true & 48600.0 & 3.6538e-9 & -4.80336e-9 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_theta\_AM & true & 48600.0 & 3.65929e-9 & -4.81252e-9 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_theta\_rhos & true & 48600.0 & 3.65683e-9 & -4.80941e-9 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_theta\_rhos\_AM & true & 48600.0 & 3.65586e-9 & -4.82498e-9 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_theta\_global & true & 48600.0 & 3.65936e-9 & -4.81042e-9 \\
+  flux\_theta & flux\_theta & true & 48600.0 & 1.44901e-5 & -1.37107e-5 \\
+  flux\_theta & flux\_theta\_AM & true & 48600.0 & 9.71031e-6 & -9.12656e-6 \\
+  flux\_theta & flux\_theta\_rhos & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta & flux\_theta\_rhos\_AM & true & 48600.0 & 1.15544e-5 & -1.09317e-5 \\
+  flux\_theta & flux\_theta\_global & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_AM & flux\_theta & true & 48600.0 & 1.44901e-5 & -1.37107e-5 \\
+  flux\_theta\_AM & flux\_theta\_AM & true & 48600.0 & 9.71031e-6 & -9.12656e-6 \\
+  flux\_theta\_AM & flux\_theta\_rhos & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_AM & flux\_theta\_rhos\_AM & true & 48600.0 & 1.15544e-5 & -1.09317e-5 \\
+  flux\_theta\_AM & flux\_theta\_global & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_rhos & flux\_theta & true & 48600.0 & 1.44901e-5 & -1.37107e-5 \\
+  flux\_theta\_rhos & flux\_theta\_AM & true & 48600.0 & 9.71031e-6 & -9.12656e-6 \\
+  flux\_theta\_rhos & flux\_theta\_rhos & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_rhos & flux\_theta\_rhos\_AM & true & 48600.0 & 1.15544e-5 & -1.09317e-5 \\
+  flux\_theta\_rhos & flux\_theta\_global & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_rhos\_AM & flux\_theta & true & 48600.0 & 1.44901e-5 & -1.37107e-5 \\
+  flux\_theta\_rhos\_AM & flux\_theta\_AM & true & 48600.0 & 9.71031e-6 & -9.12656e-6 \\
+  flux\_theta\_rhos\_AM & flux\_theta\_rhos & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_rhos\_AM & flux\_theta\_rhos\_AM & true & 48600.0 & 1.15544e-5 & -1.09317e-5 \\
+  flux\_theta\_rhos\_AM & flux\_theta\_global & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_global & flux\_theta & true & 48600.0 & 1.44901e-5 & -1.37107e-5 \\
+  flux\_theta\_global & flux\_theta\_AM & true & 48600.0 & 9.71031e-6 & -9.12656e-6 \\
+  flux\_theta\_global & flux\_theta\_rhos & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_global & flux\_theta\_rhos\_AM & true & 48600.0 & 1.15544e-5 & -1.09317e-5 \\
+  flux\_theta\_global & flux\_theta\_global & true & 48600.0 & 1.44901e-5 & -1.37108e-5 \\
+  flux\_theta\_es & flux\_theta & true & 48600.0 & 1.446e-5 & -1.36824e-5 \\
+  flux\_theta\_es & flux\_theta\_AM & true & 48600.0 & 9.68916e-6 & -9.10682e-6 \\
+  flux\_theta\_es & flux\_theta\_rhos & true & 48600.0 & 1.44599e-5 & -1.36824e-5 \\
+  flux\_theta\_es & flux\_theta\_rhos\_AM & true & 48600.0 & 1.15303e-5 & -1.0909e-5 \\
+  flux\_theta\_es & flux\_theta\_global & true & 48600.0 & 1.44599e-5 & -1.36824e-5 \\
+  flux\_LMARS & flux\_theta & true & 48600.0 & 3.64619e-9 & -4.82414e-9 \\
+  flux\_LMARS & flux\_theta\_AM & true & 48600.0 & 3.66358e-9 & -4.82097e-9 \\
+  flux\_LMARS & flux\_theta\_rhos & true & 48600.0 & 3.65718e-9 & -4.82958e-9 \\
+  flux\_LMARS & flux\_theta\_rhos\_AM & true & 48600.0 & 3.66049e-9 & -4.84635e-9 \\
+  flux\_LMARS & flux\_theta\_global & true & 48600.0 & 3.6545e-9 & -4.82339e-9 \\\hline
+\end{tabular}

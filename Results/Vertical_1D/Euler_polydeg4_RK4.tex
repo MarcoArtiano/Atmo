@@ -1,0 +1,19 @@
+\begin{tabular}{rrrrrr}
+  \hline
+  \textbf{surface\_flux} & \textbf{volume\_flux} & \textbf{FluxDiff} & \textbf{t} & \textbf{max\_vel} & \textbf{min\_vel} \\
+  \texttt{String} & \texttt{String} & \texttt{Bool} & \texttt{Float64} & \texttt{U\{Float64\}} & \texttt{U\{Float64\}} \\\hline
+  FluxLaxFriedrichs & flux\_ranocha & false & 48600.0 & 2.16749e-7 & -5.14649e-7 \\
+  FluxLaxFriedrichs & flux\_ranocha & true & 48600.0 & 0.0649707 & -0.153062 \\
+  flux\_ranocha & flux\_ranocha & false & 2265.4 & NaN & NaN \\
+  flux\_ranocha & flux\_ranocha & true & 48600.0 & 3.63227e-9 & -1.74613e-9 \\
+  flux\_kennedy\_gruber & flux\_ranocha & false & 2261.2 & NaN & NaN \\
+  flux\_kennedy\_gruber & flux\_ranocha & true & 48600.0 & 4.30523e-9 & -6.56894e-9 \\
+  flux\_shima\_etal & flux\_ranocha & false & 2263.6 & NaN & NaN \\
+  flux\_shima\_etal & flux\_ranocha & true & 48600.0 & 3.58563e-9 & -1.75846e-9 \\
+  flux\_hllc & flux\_ranocha & false & 48600.0 & 2.16749e-7 & -5.14649e-7 \\
+  flux\_hllc & flux\_ranocha & true & 48600.0 & 0.00882571 & -0.0206858 \\
+  flux\_chandrashekar & flux\_ranocha & false & 2184.8 & 879.066 & -104.248 \\
+  flux\_chandrashekar & flux\_ranocha & true & 48600.0 & 9.61074 & -9.55214 \\
+  FluxLMARS & flux\_ranocha & false & 48600.0 & 2.14209e-7 & -5.1027e-7 \\
+  FluxLMARS & flux\_ranocha & true & 48600.0 & 0.0106933 & -0.0250481 \\\hline
+\end{tabular}

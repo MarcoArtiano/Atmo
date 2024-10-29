@@ -1,0 +1,7 @@
+\begin{tabular}{rrrrrr}
+  \hline
+  \textbf{surface\_flux} & \textbf{volume\_flux} & \textbf{use\_volume\_flux} & \textbf{t} & \textbf{max\_positive\_vel} & \textbf{min\_negative\_vel} \\
+  \texttt{String} & \texttt{String} & \texttt{Bool} & \texttt{Float64} & \texttt{U\{Nothing, Float64\}} & \texttt{U\{Nothing, Float64\}} \\\hline
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_ranocha & true & 1741.42 & 57.2199 & -109.819 \\
+  FluxLMARS\{Float64\}(340.0) & flux\_ranocha & true & 3000.0 & 65.816 & -72.3131 \\\hline
+\end{tabular}
