@@ -78,10 +78,10 @@ function setup_problem_tgv(;polydeg::Int, dt::Float64, initial_refinement_level:
     summary_callback = SummaryCallback()
     if problem_name == "Euler"
     analysis_interval = 100
-    analysis_callback = AnalysisCallback(semi, interval = analysis_interval, save_analysis = true,output_directory="TGV",analysis_filename="analysiseuler.dat",extra_analysis_integrals=(energy_kinetic,energy_total, entropy, pressure))
+    analysis_callback = AnalysisCallback(semi, interval = analysis_interval, save_analysis = true,output_directory="Results/TGV",analysis_filename="analysiseuler.dat",extra_analysis_integrals=(energy_kinetic,energy_total, entropy, pressure))
     elseif problem_name == "Potential"
     analysis_interval = 100
-    analysis_callback = AnalysisCallback(semi, interval = analysis_interval, save_analysis = true,output_directory="TGV",analysis_filename="analysistheta.dat",extra_analysis_integrals=(TrixiAtmo.energy_kinetic,TrixiAtmo.entropy,TrixiAtmo.entropy_phys,TrixiAtmo.pressurecompute, ))
+    analysis_callback = AnalysisCallback(semi, interval = analysis_interval, save_analysis = true,output_directory="Results/TGV",analysis_filename="analysistheta.dat",extra_analysis_integrals=(TrixiAtmo.energy_kinetic,TrixiAtmo.entropy,TrixiAtmo.entropy_phys,TrixiAtmo.pressurecompute, ))
     end
     alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
@@ -123,10 +123,10 @@ function setup_problem_density_wave(;polydeg::Int, dt::Float64, initial_refineme
     summary_callback = SummaryCallback()
     if problem_name == "Euler"
     analysis_interval = 100
-    analysis_callback = AnalysisCallback(semi, interval = analysis_interval, save_analysis = true,output_directory="DensityWave",analysis_filename="analysiseuler.dat",extra_analysis_integrals=(energy_kinetic,energy_total, entropy, pressure))
+    analysis_callback = AnalysisCallback(semi, interval = analysis_interval, save_analysis = true,output_directory="Results/DensityWave",analysis_filename="analysiseuler.dat",extra_analysis_integrals=(energy_kinetic,energy_total, entropy, pressure))
     elseif problem_name == "Potential"
     analysis_interval = 100
-    analysis_callback = AnalysisCallback(semi, interval = analysis_interval, save_analysis = true,output_directory="DensityWave",analysis_filename="analysistheta.dat",extra_analysis_integrals=(TrixiAtmo.energy_kinetic,TrixiAtmo.entropy,TrixiAtmo.entropy_phys,TrixiAtmo.pressurecompute, ))
+    analysis_callback = AnalysisCallback(semi, interval = analysis_interval, save_analysis = true,output_directory="Results/DensityWave",analysis_filename="analysistheta.dat",extra_analysis_integrals=(TrixiAtmo.energy_kinetic,TrixiAtmo.entropy,TrixiAtmo.entropy_phys,TrixiAtmo.pressurecompute, ))
     end
     alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
@@ -147,13 +147,13 @@ function setup_problem_density_wave(;polydeg::Int, dt::Float64, initial_refineme
     
 end
 
-function setup_problem_vertical_nc(;polydeg::Int, dt::Float64, initial_refinement_level::Int64, surface_flux, volume_flux, problem_setup::ProblemSetup, use_volume_flux::Bool)
+function setup_problem_vertical_nc(;polydeg::Int, dt::Float64, initial_refinement_level::Int64, surface_flux, volume_flux, nonconservative_flux, problem_setup::ProblemSetup, use_volume_flux::Bool)
 
     @unpack tspan, periodicity, coordinates_min, coordinates_max, equations = problem_setup                         
     @unpack initial_condition, source_terms, boundary_conditions, time_method = problem_setup
         
     if use_volume_flux
-        solver = DGSEM(polydeg = polydeg, surface_flux = (surface_flux, flux_nonconservative_gravity), volume_integral = VolumeIntegralFluxDifferencing((volume_flux, flux_nonconservative_gravity)))
+        solver = DGSEM(polydeg = polydeg, surface_flux = (surface_flux, nonconservative_flux), volume_integral = VolumeIntegralFluxDifferencing((volume_flux, nonconservative_flux)))
     else
         solver = DGSEM(polydeg = polydeg, surface_flux = surface_flux)
     end

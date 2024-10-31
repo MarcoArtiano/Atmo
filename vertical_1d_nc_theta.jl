@@ -58,11 +58,11 @@ function initial_condition_theta(x, t, equations)
 end
 
 
-function vertical_1d_nc(;polydeg::Int, dt::Float64, time_method, initial_refinement_level::Int64, surface_flux, volume_flux, problem_setup::ProblemSetup, use_volume_flux::Bool)
+function vertical_1d_nc(;polydeg::Int, dt::Float64, time_method, initial_refinement_level::Int64, surface_flux, volume_flux, nonconservative_flux, problem_setup::ProblemSetup, use_volume_flux::Bool)
     @unpack equations = problem_setup    
 
     ode, callbacks, semi  =  setup_problem_vertical_nc(;polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level,
-                                   surface_flux = surface_flux, volume_flux = volume_flux,
+                                   surface_flux = surface_flux, volume_flux = volume_flux, nonconservative_flux = nonconservative_flux,
                                    problem_setup = problem_setup, use_volume_flux = use_volume_flux)
 
     integrator = init(ode, time_method,
@@ -89,7 +89,7 @@ function set_vertical_1d_nc(time_method, equations, problem_name)
 end
 
 
-function run_problems(;problem, polydeg, dt, initial_refinement_level, time_method, surface_fluxes, volume_fluxes, use_volume_fluxes)
+function run_problems(;problem, polydeg, dt, initial_refinement_level, time_method, surface_fluxes, volume_fluxes, nonconservative_flux, use_volume_fluxes)
 
     @unpack problem_name = problem
 
@@ -101,7 +101,7 @@ function run_problems(;problem, polydeg, dt, initial_refinement_level, time_meth
             for use_volume_flux in use_volume_fluxes
                 # Setup del problema e salvataggio dei risultati
                 t, vel = vertical_1d_nc(;polydeg = polydeg, dt = dt, time_method = time_method, initial_refinement_level = initial_refinement_level,
-                                       surface_flux = surface_flux, volume_flux = volume_flux,
+                                       surface_flux = surface_flux, volume_flux = volume_flux, nonconservative_flux,
                                        problem_setup = problem, use_volume_flux = use_volume_flux)
                 # Trova il massimo positivo e il minimo negativo nella matrice vel
                 if any(isnan,vel)
@@ -119,10 +119,11 @@ function run_problems(;problem, polydeg, dt, initial_refinement_level, time_meth
 
     # Extract the name of the type of time_method
     time_method_name = nameof(typeof(time_method))
+    parts = split(string(nonconservative_flux), "_")
 
     # Constructing the filename for the LaTeX table
-    foldername = "ResultsVertical_1D_NC/Refinement_$initial_refinement_level"
-    filename = joinpath(foldername, "$(problem_name)_polydeg$(polydeg)_$(time_method_name)_Refinement_$(initial_refinement_level)_dt_$( dt)_gammarho_theta.tex")
+    foldername = "Results/Vertical_1D_NC/Refinement_$initial_refinement_level"
+    filename = joinpath(foldername, "$(problem_name)_polydeg$(polydeg)_$(time_method_name)_Refinement_$(initial_refinement_level)_dt_$( dt)_"*parts[end]*"_theta.tex")
 
     # Open file to write
     open(filename, "w") do file
@@ -148,27 +149,66 @@ function run_vertical_1d_nc(;time_method = RK4(), polydeg::Int = 3)
 
     use_volume_fluxes = (true)
 
-    time_methods = (RK4(), SSPRK43())
+    time_methods = (RK4(),)
 
-    polydegs = (3, 4)
+    polydegs = (2, 3, 4)
 
     initial_refinement_levels = (3, 4)
     dt = 0.2
+
+    nonconservative_flux = TrixiAtmo.flux_nonconservative_gravity_am
+    # nonconservative_flux = TrixiAtmo.flux_nonconservative_gravity_gamma
+    # nonconservative_flux = TrixiAtmo.flux_nonconservative_gravity_log
+
         for polydeg in polydegs
             for time_method in time_methods
                 for initial_refinement_level in initial_refinement_levels
-                run_problems(;problem = Euler1DV, polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level, time_method = time_method, surface_fluxes = surface_fluxes_euler, volume_fluxes = volume_fluxes_euler, use_volume_fluxes = use_volume_fluxes)
+                run_problems(;problem = Euler1DV, polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level, time_method = time_method, surface_fluxes = surface_fluxes_euler, volume_fluxes = volume_fluxes_euler, nonconservative_flux = nonconservative_flux, use_volume_fluxes = use_volume_fluxes)
                 end
             end
         end
-	throw(error)
         for polydeg in polydegs
             for time_method in time_methods
                     for initial_refinement_level in initial_refinement_levels
-                run_problems(;problem = Potential1DV, polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level, time_method = time_method, surface_fluxes = surface_fluxes_potential, volume_fluxes = volume_fluxes_potential, use_volume_fluxes = use_volume_fluxes)
+                run_problems(;problem = Potential1DV, polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level, time_method = time_method, surface_fluxes = surface_fluxes_potential, volume_fluxes = volume_fluxes_potential, nonconservative_flux = nonconservative_flux, use_volume_fluxes = use_volume_fluxes)
                     end
             end
         end
+
+        nonconservative_flux = TrixiAtmo.flux_nonconservative_gravity_gamma
+    # nonconservative_flux = TrixiAtmo.flux_nonconservative_gravity_log
+
+    for polydeg in polydegs
+        for time_method in time_methods
+            for initial_refinement_level in initial_refinement_levels
+            run_problems(;problem = Euler1DV, polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level, time_method = time_method, surface_fluxes = surface_fluxes_euler, volume_fluxes = volume_fluxes_euler, nonconservative_flux = nonconservative_flux, use_volume_fluxes = use_volume_fluxes)
+            end
+        end
+    end
+    for polydeg in polydegs
+        for time_method in time_methods
+                for initial_refinement_level in initial_refinement_levels
+            run_problems(;problem = Potential1DV, polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level, time_method = time_method, surface_fluxes = surface_fluxes_potential, volume_fluxes = volume_fluxes_potential, nonconservative_flux = nonconservative_flux, use_volume_fluxes = use_volume_fluxes)
+                end
+        end
+    end
+
+    nonconservative_flux = TrixiAtmo.flux_nonconservative_gravity_log
+
+    for polydeg in polydegs
+        for time_method in time_methods
+            for initial_refinement_level in initial_refinement_levels
+            run_problems(;problem = Euler1DV, polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level, time_method = time_method, surface_fluxes = surface_fluxes_euler, volume_fluxes = volume_fluxes_euler, nonconservative_flux = nonconservative_flux, use_volume_fluxes = use_volume_fluxes)
+            end
+        end
+    end
+    for polydeg in polydegs
+        for time_method in time_methods
+                for initial_refinement_level in initial_refinement_levels
+            run_problems(;problem = Potential1DV, polydeg = polydeg, dt = dt, initial_refinement_level = initial_refinement_level, time_method = time_method, surface_fluxes = surface_fluxes_potential, volume_fluxes = volume_fluxes_potential, nonconservative_flux = nonconservative_flux, use_volume_fluxes = use_volume_fluxes)
+                end
+        end
+    end
 
     return nothing
 

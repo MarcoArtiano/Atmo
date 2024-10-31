@@ -110,7 +110,38 @@ end
     return SVector(0, p_star, 0,0)
 end
 
-@inline function flux_nonconservative_gravity(u_ll, u_rr, orientation::Integer,
+@inline function flux_nonconservative_gravity_am(u_ll, u_rr, orientation::Integer,
+    equations::CompressibleEulerEquations1DNC)
+# Pull the necessary left and right state information
+rho_ll, _, _, phi_ll = u_ll
+rho_rr, _, _, phi_rr = u_rr
+
+rho_avg = 0.5f0*(rho_ll + rho_rr)
+
+jphi = phi_rr - phi_ll
+
+# Bottom gradient nonconservative term: (0, g h b_x, 0)
+f = SVector(0.0, rho_avg*jphi, 0.0, 0.0)
+
+return f
+end
+
+@inline function flux_nonconservative_gravity_log(u_ll, u_rr, orientation::Integer,
+    equations::CompressibleEulerEquations1DNC)
+# Pull the necessary left and right state information
+rho_ll, _, _, phi_ll = u_ll
+rho_rr, _, _, phi_rr = u_rr
+
+rho_avg = ln_mean(rho_ll, rho_rr)
+jphi = phi_rr - phi_ll
+
+# Bottom gradient nonconservative term: (0, g h b_x, 0)
+f = SVector(0.0, rho_avg*jphi, 0.0, 0.0)
+
+return f
+end
+
+@inline function flux_nonconservative_gravity_gamma(u_ll, u_rr, orientation::Integer,
     equations::CompressibleEulerEquations1DNC)
 # Pull the necessary left and right state information
 rho_ll, _, _, phi_ll = u_ll

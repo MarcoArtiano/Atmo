@@ -45,9 +45,9 @@ function density_wave_1d(;polydeg::Int, dt = 1.0, time_method, initial_refinemen
                                    dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
                                    save_everystep = false, callback = callbacks, adaptive = false);
     if problem_name == "Euler"
-    data = readdlm("DensityWave/analysiseuler.dat", skipstart=1)  
+    data = readdlm("Results/DensityWave/analysiseuler.dat", skipstart=1)  
     elseif problem_name == "Potential"
-    data = readdlm("DensityWave/analysistheta.dat", skipstart=1)
+    data = readdlm("Results/DensityWave/analysistheta.dat", skipstart=1)
     end
 
 col_time = 2                 # Time column
@@ -65,9 +65,9 @@ pressure = data[:, col_pressure] .- data[1,col_pressure]
 results = hcat(time, energy_kinetic, total_energy, entropy_phys, pressure)
  
     if problem_name == "Euler"
-    writedlm("DensityWave/processed_data_euler.dat", results)    
+    writedlm("Results/DensityWave/processed_data_euler.dat", results)    
     elseif problem_name == "Potential"
-    writedlm("DensityWave/processed_data_potential_"*string(surface_flux)*".dat", results)    
+    writedlm("Results/DensityWave/processed_data_potential_"*string(surface_flux)*".dat", results)    
     end
 
     return nothing

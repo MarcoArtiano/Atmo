@@ -145,7 +145,7 @@ function run_problems(;problem, polydeg, time_method, surface_fluxes, volume_flu
     time_method_name = nameof(typeof(time_method))
 
     # Constructing the filename for the LaTeX table
-    foldername = "Vertical_1D"
+    foldername = "Results/Vertical_1D"
     filename = joinpath(foldername, "$(problem_name)_polydeg$(polydeg)_$(time_method_name).tex")
 
     # Open file to write
@@ -174,7 +174,7 @@ function run_vertical_1d(;time_method = RK4(), polydeg::Int = 3)
 
     time_methods = (RK4(), SSPRK43())
 
-    polydegs = (1, 2, 3, 4)
+    polydegs = (2, 3, 4)
 
         for polydeg in polydegs
             for time_method in time_methods
