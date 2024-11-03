@@ -33,6 +33,7 @@ export CompressibleEulerPotentialTemperatureEquations2DNC
 export LinearizedGravityWaveEquations2D
 export LinearizedGravityWaveEquationsSlow2D
 export LinearizedGravityWaveEquationsFast2D
+export LinearizedGravityWaveEquationsFastVertical2D
 
 export flux_chandrashekar, flux_theta, flux_theta_rhoAM, flux_theta_physentropy,
        flux_theta_physentropy2, flux_theta_es

@@ -1,4 +1,4 @@
-
+using Revise
 using Trixi
 using OrdinaryDiffEq
 using Plots
@@ -10,16 +10,16 @@ N = 0.01
 
 equations_slow = LinearizedGravityWaveEquationsSlow2D(cs, U, N)
 equations_fast = LinearizedGravityWaveEquationsFast2D(cs, U, N)
-solver = DGSEM(polydeg = 4, surface_flux = flux_lmars)
+solver = DGSEM(polydeg = 1, surface_flux = flux_lmars)
 
 coordinates_min = (-150_000.0, 0.0)
 coordinates_max = (150_000.0, 10_000.0)
 
-trees_per_dimension = (7, 4)
+trees_per_dimension = (1, 1)
 
- mesh = P4estMesh(trees_per_dimension, polydeg = 4,
+ mesh = P4estMesh(trees_per_dimension, polydeg = 1,
                                       coordinates_min = coordinates_min, coordinates_max = coordinates_max,
-                                      periodicity = (true, false), initial_refinement_level = 2)
+                                      periodicity = (true, false), initial_refinement_level = 1)
 
                                       boundary_conditions = Dict(:y_neg => boundary_condition_slip_wall,
                                       :y_pos => boundary_condition_slip_wall)

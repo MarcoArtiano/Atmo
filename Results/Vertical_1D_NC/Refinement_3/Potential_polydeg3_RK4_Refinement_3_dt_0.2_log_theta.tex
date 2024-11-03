@@ -1,0 +1,23 @@
+\begin{tabular}{rrrrrr}
+  \hline
+  \textbf{surface\_flux} & \textbf{volume\_flux} & \textbf{use\_volume\_flux} & \textbf{t} & \textbf{max\_vel} & \textbf{min\_vel} \\
+  \texttt{String} & \texttt{String} & \texttt{Bool} & \texttt{Float64} & \texttt{U\{Nothing, Float64\}} & \texttt{U\{Nothing, Float64\}} \\\hline
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_theta & true & 48600.0 & 1.52471e-5 & -1.45226e-5 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_theta\_rhos & true & 48600.0 & 1.51122e-5 & -1.43941e-5 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_theta\_global & true & 48600.0 & 1.51123e-5 & -1.43941e-5 \\
+  flux\_theta & flux\_theta & true & 48600.0 & 2.08601 & -1.98687 \\
+  flux\_theta & flux\_theta\_rhos & true & 48600.0 & 0.692294 & -0.659307 \\
+  flux\_theta & flux\_theta\_global & true & 48600.0 & 0.693465 & -0.660415 \\
+  flux\_theta\_rhos & flux\_theta & true & 48600.0 & 2.08564 & -1.98831 \\
+  flux\_theta\_rhos & flux\_theta\_rhos & true & 48600.0 & 0.692294 & -0.659307 \\
+  flux\_theta\_rhos & flux\_theta\_global & true & 48600.0 & 0.693465 & -0.660415 \\
+  flux\_theta\_global & flux\_theta & true & 48600.0 & 2.08598 & -1.98702 \\
+  flux\_theta\_global & flux\_theta\_rhos & true & 48600.0 & 0.692294 & -0.659307 \\
+  flux\_theta\_global & flux\_theta\_global & true & 48600.0 & 0.693465 & -0.660415 \\
+  flux\_theta\_es & flux\_theta & true & 48600.0 & 0.801213 & -0.763254 \\
+  flux\_theta\_es & flux\_theta\_rhos & true & 48600.0 & 0.0597068 & -0.0568617 \\
+  flux\_theta\_es & flux\_theta\_global & true & 48600.0 & 0.059709 & -0.0568635 \\
+  flux\_LMARS & flux\_theta & true & 48600.0 & 1.28663e-5 & -1.22551e-5 \\
+  flux\_LMARS & flux\_theta\_rhos & true & 48600.0 & 1.28663e-5 & -1.2255e-5 \\
+  flux\_LMARS & flux\_theta\_global & true & 48600.0 & 1.28663e-5 & -1.2255e-5 \\\hline
+\end{tabular}

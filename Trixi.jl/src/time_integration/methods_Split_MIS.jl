@@ -247,6 +247,10 @@ function solve!(integrator::SimpleIntegratorIMEX)
                     solveODEMIS_SE!(Yn, integrator.dZn, integrator.Zn0, dts,
                                 alg.d[stage] * integrator.dt, integrator, prob, stage,
                                 semi)
+                elseif alg.FastMethod == "MP"
+                    solveODEMIS_MP!(Yn, integrator.dZn, integrator.Zn0, dts,
+                                alg.d[stage] * integrator.dt, integrator, prob, stage,
+                                semi)                  
                 end
 
             end
@@ -373,6 +377,23 @@ function solveODEMIS_SE!(Yn, dZn, Zn0, dt, dtL, integrator, prob, stage, semi)
         integrator.f2(integrator.du, integrator.u_tmp, prob.p,
                       integrator.t + integrator.dt)
         time_stepping_symplectic!(integrator.u_tmp, integrator.du, dtloc, semi, dZn, 3)
+       throw(error)    
+    end
+    Yn[stage] .= integrator.u_tmp
+end
+
+function solveODEMIS_MP!(Yn, dZn, Zn0, dt, dtL, integrator, prob, stage, semi)
+    numit = round(dtL / dt)
+    dtloc = dtL / numit
+    integrator.u_tmp .= Zn0
+    un = copy(Zn0)
+    for ii in 1:numit
+        # Compute RHS u
+        # We perform Euler, then we simply adjust p and w that are the "vertical variables"
+        integrator.f2(integrator.du, integrator.u_tmp, prob.p,
+                      integrator.t + integrator.dt) # compute rhs u^n
+        time_stepping_midpoint!(integrator.u_tmp, integrator.du, dtloc, semi, dZn)
+        time_stepping_p_w!(integrator.u_tmp, integrator.du, dtloc, semi, dZn)
     end
     Yn[stage] .= integrator.u_tmp
 end
@@ -386,6 +407,41 @@ function time_stepping_symplectic!(u, du, dt, semi, dZn, var)
     perform_time_step_se!(u_wrap, du_wrap, dZn_wrap, var, dt, semi, solver, cache,
                           equations, mesh)
     return nothing
+end
+
+function time_stepping_midpoint!(u, du, dt, semi, dZn)
+    mesh, equations, solver, cache = Trixi.mesh_equations_solver_cache(semi)
+
+    u_wrap = Trixi.wrap_array(u, semi)
+    du_wrap = Trixi.wrap_array(du, semi)
+    dZn_wrap = Trixi.wrap_array(dZn, semi)
+    perform_time_step_mp!(u_wrap, du_wrap, dZn_wrap, dt, semi, solver, cache,
+                          equations, mesh)
+    return nothing
+end
+
+function time_stepping_p_w!(u, du, dt, semi, dZn)
+    mesh, equations, solver, cache = Trixi.mesh_equations_solver_cache(semi)
+
+    u_wrap = Trixi.wrap_array(u, semi)
+    du_wrap = Trixi.wrap_array(du, semi)
+    dZn_wrap = Trixi.wrap_array(dZn, semi)
+    perform_time_step_p_w!(u_wrap, du_wrap, dZn_wrap, dt, semi, solver, cache,
+                          equations, mesh)
+    return nothing
+end
+
+function perform_time_step_p_w!(u, du, dZn, dt, semi, solver, cache, equations,
+    mesh::Union{TreeMesh{2}, P4estMesh{2}, StructuredMesh{2}})
+    var = 3
+for element in eachelement(solver, cache)
+    for j in eachnode(solver), i in eachnode(solver)
+u[var, i,j, element] = u[var, i, j, element] +
+      dt * (du[var, i,j, element] + dZn[var, i,j, element])
+    end
+end
+
+return nothing
 end
 
 function perform_time_step_se!(u, du, dZn, lvar, dt, semi, solver, cache, equations,
@@ -407,6 +463,20 @@ function perform_time_step_se!(u, du, dZn, lvar, dt, semi, solver, cache, equati
 for element in eachelement(solver, cache)
     for j in eachnode(solver), i in eachnode(solver)
         for var in lvar:(lvar+1)
+u[var, i,j, element] = u[var, i, j, element] +
+      dt * (du[var, i,j, element] + dZn[var, i,j, element])
+        end
+    end
+end
+
+return nothing
+end
+
+function perform_time_step_mp!(u, du, dZn, dt, semi, solver, cache, equations,
+    mesh::Union{TreeMesh{2}, P4estMesh{2}, StructuredMesh{2}})
+for element in eachelement(solver, cache)
+    for j in eachnode(solver), i in eachnode(solver)
+        for var in 1:4
 u[var, i,j, element] = u[var, i, j, element] +
       dt * (du[var, i,j, element] + dZn[var, i,j, element])
         end

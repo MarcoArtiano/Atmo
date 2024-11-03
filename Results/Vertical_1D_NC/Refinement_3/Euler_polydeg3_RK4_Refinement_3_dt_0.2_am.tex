@@ -1,0 +1,29 @@
+\begin{tabular}{rrrrrr}
+  \hline
+  \textbf{surface\_flux} & \textbf{volume\_flux} & \textbf{use\_volume\_flux} & \textbf{t} & \textbf{max\_vel} & \textbf{min\_vel} \\
+  \texttt{String} & \texttt{String} & \texttt{Bool} & \texttt{Float64} & \texttt{U\{Nothing, Float64\}} & \texttt{U\{Nothing, Float64\}} \\\hline
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_ranocha & true & 48600.0 & 1.38192e-7 & -8.93532e-7 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_shima\_etal & true & 48600.0 & 1.3975e-7 & -8.95203e-7 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_kennedy\_gruber & true & 48600.0 & 0.000593234 & -0.000623243 \\
+  FluxLaxFriedrichs(max\_abs\_speed\_naive) & flux\_chandrashekar & true & 48600.0 & 0.000174924 & -0.000184732 \\
+  flux\_ranocha & flux\_ranocha & true & 48600.0 & 9.2531 & -10.3856 \\
+  flux\_ranocha & flux\_shima\_etal & true & 48600.0 & 7.59605 & -5.24792 \\
+  flux\_ranocha & flux\_kennedy\_gruber & true & 1528.8 & 193.877 & -142.067 \\
+  flux\_ranocha & flux\_chandrashekar & true & 48600.0 & 2.73778 & -2.73835 \\
+  flux\_hllc & flux\_ranocha & true & 48600.0 & 1.37452e-7 & -8.91366e-7 \\
+  flux\_hllc & flux\_shima\_etal & true & 48600.0 & 1.38989e-7 & -8.9299e-7 \\
+  flux\_hllc & flux\_kennedy\_gruber & true & 48600.0 & 0.000320761 & -0.000336873 \\
+  flux\_hllc & flux\_chandrashekar & true & 48600.0 & 0.000173886 & -0.00018364 \\
+  flux\_shima\_etal & flux\_ranocha & true & 48600.0 & 12.9234 & -6.50333 \\
+  flux\_shima\_etal & flux\_shima\_etal & true & 48600.0 & 35.5068 & -37.8837 \\
+  flux\_shima\_etal & flux\_kennedy\_gruber & true & 1533.4 & 1.6345e12 & -1.44533e12 \\
+  flux\_shima\_etal & flux\_chandrashekar & true & 48600.0 & 2.39191 & -1.82927 \\
+  flux\_kennedy\_gruber & flux\_ranocha & true & 48600.0 & 0.134267 & -0.111462 \\
+  flux\_kennedy\_gruber & flux\_shima\_etal & true & 48600.0 & 0.0599721 & -0.0449528 \\
+  flux\_kennedy\_gruber & flux\_kennedy\_gruber & true & 1529.2 & 3.69356e12 & -1.17272e14 \\
+  flux\_kennedy\_gruber & flux\_chandrashekar & true & 14777.0 & 104.178 & -64.6157 \\
+  flux\_chandrashekar & flux\_ranocha & true & 48600.0 & 0.000491301 & -0.000477712 \\
+  flux\_chandrashekar & flux\_shima\_etal & true & 48600.0 & 0.00178968 & -0.00175803 \\
+  flux\_chandrashekar & flux\_kennedy\_gruber & true & 1529.6 & NaN & NaN \\
+  flux\_chandrashekar & flux\_chandrashekar & true & 48600.0 & 0.272273 & -0.286493 \\\hline
+\end{tabular}
