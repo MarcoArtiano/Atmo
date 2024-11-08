@@ -47,6 +47,7 @@ varnames(::typeof(cons2prim), ::CompressibleEulerPotentialTemperatureEquations3D
     rho, rho_v1, rho_v2, rho_v3, rho_theta = u
     v1 = rho_v1 / rho
     v2 = rho_v2 / rho
+    v3 = rho_v3 / rho
     v_normal = v1 * normal_direction[1] + v2 * normal_direction[2] + v3* normal_direction[3]
     rho_v_normal = rho * v_normal
     f1 = rho_v_normal

@@ -2,7 +2,7 @@
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "1718609ec60d7743f14902a884d6caca4f3994db"
+project_hash = "f6b60b79bbc0f7749c18488e8f03443d8266d6fe"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "016833eb52ba2d6bea9fcb50ca295980e728ee24"
@@ -2341,9 +2341,9 @@ version = "7.2.1+1"
 
 [[deps.SummationByPartsOperators]]
 deps = ["ArgCheck", "AutoHashEquals", "FFTW", "InteractiveUtils", "LinearAlgebra", "LoopVectorization", "MuladdMacro", "PolynomialBases", "PrecompileTools", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "SimpleUnPack", "SparseArrays", "StaticArrayInterface", "StaticArrays", "Unrolled"]
-git-tree-sha1 = "f3c6c03bab83a4470fbe0d7e1d47ec10393f591a"
+git-tree-sha1 = "6e62c478a89d5f4e8d61bfadf3520145d8241c53"
 uuid = "9f78cca6-572e-554e-b819-917d2f1cf240"
-version = "0.5.69"
+version = "0.5.70"
 
     [deps.SummationByPartsOperators.extensions]
     SummationByPartsOperatorsBandedMatricesExt = "BandedMatrices"

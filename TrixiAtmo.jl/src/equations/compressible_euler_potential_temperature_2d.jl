@@ -241,6 +241,44 @@ end
     return SVector(f1, f2, f3, f4)
 end
 
+@inline function (flux_lmars::FluxLMARS)(u_ll, u_rr, orientation::Integer,
+    equations::CompressibleEulerPotentialTemperatureEquations2D)
+c = flux_lmars.speed_of_sound
+
+# Unpack left and right state
+rho_ll, v1_ll, v2_ll,  p_ll = cons2prim(u_ll, equations)
+rho_rr, v1_rr, v2_rr,  p_rr = cons2prim(u_rr, equations)
+
+if orientation == 1
+v_ll = v1_ll
+v_rr = v1_rr
+else orientation == 2
+v_ll = v2_ll
+v_rr = v2_rr
+end
+
+rho = 0.5 * (rho_ll + rho_rr)
+p = 0.5 * (p_ll + p_rr) - 0.5 * c * rho * (v_rr - v_ll)
+v = 0.5 * (v_ll + v_rr) - 1 / (2 * c * rho) * (p_rr - p_ll)
+
+# We treat the energy term analogous to the potential temperature term in the paper by
+# Chen et al., i.e. we use p_ll and p_rr, and not p
+if v >= 0
+f1, f2, f3, f4 = v * u_ll
+else
+f1, f2, f3, f4 = v * u_rr
+end
+
+if orientation == 1
+f2 += p
+else
+f3 += p
+end
+
+return SVector(f1, f2, f3, f4)
+end
+
+
 @inline function flux_theta_AM(u_ll, u_rr, normal_direction::AbstractVector,
     equations::CompressibleEulerPotentialTemperatureEquations2D)
 # Unpack left and right state
@@ -447,6 +485,64 @@ end
 return SVector(f1, f2, f3, f4)
 end
 
+@inline function flux_theta_rhos(u_ll, u_rr, normal_direction::AbstractVector,
+    equations::CompressibleEulerPotentialTemperatureEquations2D)
+# Unpack left and right state
+rho_ll, v1_ll, v2_ll, p_ll = cons2prim(u_ll, equations)
+rho_rr, v1_rr, v2_rr, p_rr = cons2prim(u_rr, equations)
+v_dot_n_ll = v1_ll * normal_direction[1] + v2_ll * normal_direction[2]
+v_dot_n_rr = v1_rr * normal_direction[1] + v2_rr * normal_direction[2]
+_, _, _, rho_theta_ll = u_ll
+_, _, _, rho_theta_rr = u_rr
+# Compute the necessary mean values
+rho_mean = ln_mean(rho_ll, rho_rr)
+
+gammamean = stolarsky_mean(rho_theta_ll, rho_theta_rr, equations.gamma)
+
+v1_avg = 0.5f0 * (v1_ll + v1_rr)
+v2_avg = 0.5f0 * (v2_ll + v2_rr)
+p_avg = 0.5f0 * (p_ll + p_rr)
+
+
+# Calculate fluxes depending on normal_direction
+f1 = rho_mean * 0.5f0 * (v_dot_n_ll + v_dot_n_rr)
+f2 = f1 * v1_avg + p_avg * normal_direction[1]
+f3 = f1 * v2_avg + p_avg * normal_direction[2]
+f4 = f1 * inv_ln_mean(rho_ll/ rho_theta_ll, rho_rr/rho_theta_rr)
+return SVector(f1, f2, f3, f4)
+end
+
+@inline function flux_theta_rhos(u_ll, u_rr, orientation::Integer,
+equations::CompressibleEulerPotentialTemperatureEquations2D)
+# Unpack left and right state
+rho_ll, v1_ll, v2_ll, p_ll = cons2prim(u_ll, equations)
+rho_rr, v1_rr, v2_rr, p_rr = cons2prim(u_rr, equations)
+
+_, _, _,  rho_theta_ll = u_ll
+_, _, _,  rho_theta_rr = u_rr
+# Compute the necessary mean values
+rho_mean = ln_mean(rho_ll, rho_rr)
+
+gammamean = stolarsky_mean(rho_theta_ll, rho_theta_rr, equations.gamma)
+
+v1_avg = 0.5f0 * (v1_ll + v1_rr)
+v2_avg = 0.5f0 * (v2_ll + v2_rr)
+p_avg = 0.5f0 * (p_ll + p_rr)
+
+if orientation == 1
+f1 = rho_mean * v1_avg
+f2 = f1 * v1_avg + p_avg
+f3 = f1 * v2_avg
+f4 = f1 * inv_ln_mean(rho_ll/ rho_theta_ll, rho_rr/rho_theta_rr)
+else
+f1 = rho_mean * v2_avg
+f2 = f1 * v1_avg
+f3 = f1 * v2_avg + p_avg
+f4 = f1 * inv_ln_mean(rho_ll/ rho_theta_ll, rho_rr/rho_theta_rr)
+end
+
+return SVector(f1, f2, f3, f4)
+end
 
 @inline function flux_theta_global_es(u_ll, u_rr, normal_direction::AbstractVector,
     equations::CompressibleEulerPotentialTemperatureEquations2D)
@@ -486,6 +582,123 @@ end
     f4 = inv_ln_mean(rho_ll / rho_theta_ll, rho_rr / rho_theta_rr) * f1
     return SVector(f1, f2, f3, f4)
 end
+
+@inline function splitting_vanleer_haenel(u, orientation_or_normal_direction,
+    equations::CompressibleEulerPotentialTemperatureEquations2D)
+fm = splitting_vanleer_haenel(u, Val{:minus}(), orientation_or_normal_direction,
+equations)
+fp = splitting_vanleer_haenel(u, Val{:plus}(), orientation_or_normal_direction,
+equations)
+return fm, fp
+end
+
+@inline function splitting_vanleer_haenel(u, ::Val{:plus}, orientation::Integer,
+    equations::CompressibleEulerPotentialTemperatureEquations2D)
+rho, rho_v1, rho_v2, rho_theta = u
+v1 = rho_v1 / rho
+v2 = rho_v2 / rho
+K = equations.p_0 * (equations.R  / equations.p_0)^equations.gamma
+p = equations.p_0 * (equations.R * rho_theta / equations.p_0)^equations.gamma
+
+a = sqrt(equations.gamma * p / rho)
+
+if orientation == 1
+M = v1 / a
+p_plus = 0.5f0 * (1 + equations.gamma * M) * p
+
+f1p = 0.25f0 * rho * a * (M + 1)^2
+f2p = f1p * v1 + p_plus
+f3p = f1p * v2
+f4p = 0.25f0 * (M + 1)^2 * a * (rho * a^2/(K*equations.gamma))^(1/equations.gamma)
+else # orientation == 2
+M = v2 / a
+p_plus = 0.5f0 * (1 + equations.gamma * M) * p
+
+f1p = 0.25f0 * rho * a * (M + 1)^2
+f2p = f1p * v1
+f3p = f1p * v2 + p_plus
+f4p = 0.25f0 * (M + 1)^2 * a * (rho * a^2/(K*equations.gamma))^(1/equations.gamma)
+end
+return SVector(f1p, f2p, f3p, f4p)
+end
+
+@inline function splitting_vanleer_haenel(u, ::Val{:minus}, orientation::Integer,
+    equations::CompressibleEulerPotentialTemperatureEquations2D)
+rho, rho_v1, rho_v2, rho_theta = u
+v1 = rho_v1 / rho
+v2 = rho_v2 / rho
+K = equations.p_0 * (equations.R  / equations.p_0)^equations.gamma
+p = equations.p_0 * (equations.R * rho_theta / equations.p_0)^equations.gamma
+
+a = sqrt(equations.gamma * p / rho)
+
+if orientation == 1
+M = v1 / a
+p_minus = 0.5f0 * (1 - equations.gamma * M) * p
+
+f1m = -0.25f0 * rho * a * (M - 1)^2
+f2m = f1m * v1 + p_minus
+f3m = f1m * v2
+f4m = -0.25f0 * (M - 1)^2 * a * (rho * a^2/(K*equations.gamma))^(1/equations.gamma)
+else # orientation == 2
+M = v2 / a
+p_minus = 0.5f0 * (1 - equations.gamma * M) * p
+
+f1m = -0.25f0 * rho * a * (M - 1)^2
+f2m = f1m * v1
+f3m = f1m * v2 + p_minus
+f4m = -0.25f0 * (M - 1)^2 * a * (rho * a^2/(K*equations.gamma))^(1/equations.gamma)
+end
+return SVector(f1m, f2m, f3m, f4m)
+end
+
+@inline function splitting_vanleer_haenel(u, ::Val{:plus},
+    normal_direction::AbstractVector,
+    equations::CompressibleEulerPotentialTemperatureEquations2D)
+rho, rho_v1, rho_v2, rho_theta = u
+v1 = rho_v1 / rho
+v2 = rho_v2 / rho
+K = equations.p_0 * (equations.R  / equations.p_0)^equations.gamma
+p = equations.p_0 * (equations.R * rho_theta / equations.p_0)^equations.gamma
+
+a = sqrt(equations.gamma * p / rho)
+
+
+v_n = normal_direction[1] * v1 + normal_direction[2] * v2
+M = v_n / a
+p_plus = 0.5f0 * (1 + equations.gamma * M) * p
+
+f1p = 0.25f0 * rho * a * (M + 1)^2
+f2p = f1p * v1 + normal_direction[1] * p_plus
+f3p = f1p * v2 + normal_direction[2] * p_plus
+f4p = 0.25f0 * (M + 1)^2 * (rho * a^2/(K*equations.gamma))^(1/equations.gamma)*a
+
+return SVector(f1p, f2p, f3p, f4p)
+end
+
+@inline function splitting_vanleer_haenel(u, ::Val{:minus},
+    normal_direction::AbstractVector,
+    equations::CompressibleEulerPotentialTemperatureEquations2D)
+rho, rho_v1, rho_v2, rho_theta = u
+v1 = rho_v1 / rho
+v2 = rho_v2 / rho
+K = equations.p_0 * (equations.R  / equations.p_0)^equations.gamma
+p = equations.p_0 * (equations.R * rho_theta / equations.p_0)^equations.gamma
+
+a = sqrt(equations.gamma * p / rho)
+
+v_n = normal_direction[1] * v1 + normal_direction[2] * v2
+M = v_n / a
+p_minus = 0.5f0 * (1 - equations.gamma * M) * p
+
+f1m = -0.25f0 * rho * a * (M - 1)^2
+f2m = f1m * v1 + normal_direction[1] * p_minus
+f3m = f1m * v2 + normal_direction[2] * p_minus
+f4m = -0.25f0 * (M - 1)^2 * (rho * a^2/(K*equations.gamma))^(1/equations.gamma)*a
+
+return SVector(f1m, f2m, f3m, f4m)
+end
+
 
 @inline function prim2cons(prim,
                            equations::CompressibleEulerPotentialTemperatureEquations2D)

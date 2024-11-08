@@ -81,7 +81,7 @@
         equations::LinearizedGravityWaveEquationsFastVertical2D)
     ## get the appropriate normal vector from the orientation
     if orientation == 1   #- u_inner[1]
-    u_boundary = SVector(u_inner[1], u_inner[2], u_inner[3], u_inner[4])
+    u_boundary = SVector(-u_inner[1], u_inner[2], u_inner[3], u_inner[4])
     else # orientation == 2
     u_boundary = SVector(u_inner[1], -u_inner[2], u_inner[3], u_inner[4])
     end
@@ -105,9 +105,10 @@
     
     # compute the normal velocity
     u_normal = normal[1] * u_inner[1] + normal[2] * u_inner[2]
-    
+   # u_normal =  normal[2] * u_inner[2]
+
     # create the "external" boundary solution state
-    u_boundary = SVector(u_inner[1],# - 2.0*u_normal*normal[1],
+    u_boundary = SVector(u_inner[1] - 2.0*u_normal*normal[1],
     u_inner[2] - 2.0 * u_normal * normal[2],
     u_inner[3],
     u_inner[4])

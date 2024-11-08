@@ -29,7 +29,11 @@ struct SimpleIMEX{StageCallbacks} <: SimpleAlgorithmIMEX
 
     stage_callbacks::StageCallbacks
     FastMethod::String
-    function SimpleIMEX(; FastMethod = "RK4", stage_callbacks = ())
+    Mpw::Matrix{Float64}
+    Mwp::Matrix{Float64}
+    Mww::Matrix{Float64}
+    equations_vertical::AbstractEquations
+    function SimpleIMEX(; FastMethod = "RK4", Mwp, Mpw, Mww, equations_vertical, stage_callbacks = ())
         rkstages = 5
         beta = zeros(rkstages, rkstages)
         alfa = zeros(rkstages, rkstages)
@@ -65,7 +69,7 @@ struct SimpleIMEX{StageCallbacks} <: SimpleAlgorithmIMEX
         d4 = beta[4, 1] + beta[4, 2] + beta[4, 3]
         d5 = beta[5, 1] + beta[5, 2] + beta[5, 3] + beta[5, 4]
         d = SVector(0.0, d2, d3, d4, d5)
-        new{typeof(stage_callbacks)}(beta, alfa, gamma, d, rkstages, stage_callbacks, FastMethod)
+        new{typeof(stage_callbacks)}(beta, alfa, gamma, d, rkstages, stage_callbacks, FastMethod, Mwp, Mpw, Mww, equations_vertical)
     end
 end
 
@@ -209,6 +213,11 @@ function solve!(integrator::SimpleIntegratorIMEX)
     a = equations1.U
     b = equations2.cs
     dts = integrator.dt * a / b
+
+    Mpw = sparse(alg.Mpw)
+    Mwp = sparse(alg.Mwp)
+    Mww = sparse(alg.Mww)
+    Mpwwp = sparse(alg.Mpw*alg.Mwp*0.25f0)
     @trixi_timeit timer() "main loop" while !integrator.finalstep
         if isnan(integrator.dt)
             error("time step size `dt` is NaN")
@@ -250,7 +259,7 @@ function solve!(integrator::SimpleIntegratorIMEX)
                 elseif alg.FastMethod == "MP"
                     solveODEMIS_MP!(Yn, integrator.dZn, integrator.Zn0, dts,
                                 alg.d[stage] * integrator.dt, integrator, prob, stage,
-                                semi)                  
+                                semi, Mwp, Mpw, Mww, Mpwwp, alg.equations_vertical)                  
                 end
 
             end
@@ -263,6 +272,7 @@ function solve!(integrator::SimpleIntegratorIMEX)
 
         integrator.u .= Yn[end]
         integrator.iter += 1
+        println(integrator.iter)
         integrator.t += integrator.dt
         # handle callbacks
         if callbacks isa CallbackSet
@@ -377,24 +387,26 @@ function solveODEMIS_SE!(Yn, dZn, Zn0, dt, dtL, integrator, prob, stage, semi)
         integrator.f2(integrator.du, integrator.u_tmp, prob.p,
                       integrator.t + integrator.dt)
         time_stepping_symplectic!(integrator.u_tmp, integrator.du, dtloc, semi, dZn, 3)
-       throw(error)    
     end
     Yn[stage] .= integrator.u_tmp
 end
 
-function solveODEMIS_MP!(Yn, dZn, Zn0, dt, dtL, integrator, prob, stage, semi)
+function solveODEMIS_MP!(Yn, dZn, Zn0, dt, dtL, integrator, prob, stage, semi, Mwp, Mpw, Mww, Mpwwp, equations_vertical)
     numit = round(dtL / dt)
     dtloc = dtL / numit
     integrator.u_tmp .= Zn0
-    un = copy(Zn0)
+    LA1 = LinearAlgebra.lu(sparse(I - dtloc^2*Mpwwp))
     for ii in 1:numit
         # Compute RHS u
         # We perform Euler, then we simply adjust p and w that are the "vertical variables"
         integrator.f2(integrator.du, integrator.u_tmp, prob.p,
                       integrator.t + integrator.dt) # compute rhs u^n
-        time_stepping_midpoint!(integrator.u_tmp, integrator.du, dtloc, semi, dZn)
-        time_stepping_p_w!(integrator.u_tmp, integrator.du, dtloc, semi, dZn)
+
+        time_stepping_midpoint!(integrator.u_tmp, integrator.du, dtloc, semi, dZn) # We just compute u^n+1 = rhs(u^n) for u and b
+        
+        time_stepping_p_w!(integrator.u_tmp, integrator.du, dtloc, semi, dZn, Mwp, Mpw, Mww, integrator, equations_vertical, LA1) # We adjust the p and w variables according to mid point 
     end
+
     Yn[stage] .= integrator.u_tmp
 end
 
@@ -420,28 +432,76 @@ function time_stepping_midpoint!(u, du, dt, semi, dZn)
     return nothing
 end
 
-function time_stepping_p_w!(u, du, dt, semi, dZn)
+function time_stepping_p_w!(u, du, dt, semi, dZn, Mwp, Mpw, Mww, integrator, equations_vertical, LA1)
     mesh, equations, solver, cache = Trixi.mesh_equations_solver_cache(semi)
+   @unpack source_terms2, boundary_conditions2, solver2, cache2, equations2, initial_condition = semi
+    nvar = length(eachnode(solver))*length(eachnode(solver))*length(eachelement(solver,cache))
+   
+    # ## Checking if the two procedures are the same
+    # semi = SemidiscretizationHyperbolic(mesh, equations2, initial_condition, solver2; boundary_conditions = boundary_conditions2)  
+    # J = jacobian_ad_forward(semi)
 
-    u_wrap = Trixi.wrap_array(u, semi)
-    du_wrap = Trixi.wrap_array(du, semi)
-    dZn_wrap = Trixi.wrap_array(dZn, semi)
-    perform_time_step_p_w!(u_wrap, du_wrap, dZn_wrap, dt, semi, solver, cache,
-                          equations, mesh)
+    # du2  = copy(du)
+    # du2 .= J*u
+    # du3 = copy(du)
+    # ## Posso chiamare rhs! tante volte quanto è la lunghezza di u e costruire la matrice J come prima colonna data da u 1 e tutti 0, seconda colonna secondo u 1 e tutti gli altri 0 etc.
+    # u_wrap = Trixi.wrap_array(u, semi)
+    # du_wrap = Trixi.wrap_array(du3, semi)
+    # rhs!(du_wrap, u_wrap, integrator.t, mesh, equations2, boundary_conditions2, source_terms2, solver2, cache2)
+
+    # println(maximum(du3-du2))
+    # println(minimum(du3-du2))
+    ## --- > They are the same the max(abs(min,max)) = 1e-16 roughly
+    wn = view(u,2:4:4*nvar)    
+    pn = view(u,3:4:4*nvar)
+    dw = view(du,2:4:4*nvar)
+    dp = view(du,3:4:4*nvar)
+    Sw = view(dZn,2:4:4*nvar)
+    Sp = view(dZn,3:4:4*nvar)
+    
+    pnew = LA1\(pn + dt*(dp + Sp) + dt^2*0.5f0*Mpw*(dw + Sw - Mwp*pn*0.5f0))
+    duv = copy(du)
+    uv = copy(u)
+    pnv = view(uv,3:4:4*nvar)
+    pnv = (pnv + pnew)*0.5
+    uv_wrap = Trixi.wrap_array(uv, semi)
+    duv_wrap = Trixi.wrap_array(duv, semi)
+
+    rhs!(duv_wrap, uv_wrap, integrator.t, mesh, equations2, boundary_conditions2, source_terms2, solver2, cache2)
+    dwv = view(duv,2:4:4*nvar)
+    # println("Checking values")
+    # println(maximum(dwv -(0.5*Mwp*(pnew+pn) + Mww*wn)))
+    # println(minimum(dwv -(0.5*Mwp*(pnew+pn) + Mww*wn)))
+    # println(maximum(dwv -(dw + 0.5*Mwp*(pnew-pn))))
+    # println(minimum(dwv -(dw + 0.5*Mwp*(pnew-pn))))
+    wn .= wn + dt*(Sw + dwv)
+    #wn .= wn + dt*(dw + Sw + 0.5f0*Mwp*(pnew - pn))
+    pn .= pnew
+
+    #du2 == du?
+
+    # println(pnew - pn)
+    # println(maximum(pnew-pn))
+    # println(minimum(pnew-pn))
+    # LA2 = LinearAlgebra.lu(sparse(I - dt^2/4*Mwp*Mpw))
+    # wnew = LA2\(wn + dt*(dw + Sw) + dt^2*0.5f0*Mwp*(dp - Mpw*wn*0.5f0 + Sp))
+    # println(pnew - pn)
+    # println(maximum(wnew-wn))
+    # println(minimum(wnew-wn))
+     
+    # pn .= pn + dt*(dp + Sp + 0.5f0*Mpw*(wnew - wn))
+    # wn .= wnew
+    
+    # @unpack prob = integrator.sol
+    # tmp = TimeIntegratorSolution((first(prob.tspan), integrator.t),
+    #                               (prob.u0, u), prob)
+    # pd = PlotData2D(tmp)
+    # a = Plots.plot(pd["w"],aspect_ratio = 10)
+    # Plots.savefig(a,"debugging_w.pdf")  
+    # a = Plots.plot(pd["p"],aspect_ratio = 10)
+    # Plots.savefig(a,"debugging_p.pdf")       
+           
     return nothing
-end
-
-function perform_time_step_p_w!(u, du, dZn, dt, semi, solver, cache, equations,
-    mesh::Union{TreeMesh{2}, P4estMesh{2}, StructuredMesh{2}})
-    var = 3
-for element in eachelement(solver, cache)
-    for j in eachnode(solver), i in eachnode(solver)
-u[var, i,j, element] = u[var, i, j, element] +
-      dt * (du[var, i,j, element] + dZn[var, i,j, element])
-    end
-end
-
-return nothing
 end
 
 function perform_time_step_se!(u, du, dZn, lvar, dt, semi, solver, cache, equations,
@@ -476,7 +536,7 @@ function perform_time_step_mp!(u, du, dZn, dt, semi, solver, cache, equations,
     mesh::Union{TreeMesh{2}, P4estMesh{2}, StructuredMesh{2}})
 for element in eachelement(solver, cache)
     for j in eachnode(solver), i in eachnode(solver)
-        for var in 1:4
+        for var in (1,4)
 u[var, i,j, element] = u[var, i, j, element] +
       dt * (du[var, i,j, element] + dZn[var, i,j, element])
         end
